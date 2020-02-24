@@ -1,8 +1,10 @@
 from sklearn.feature_extraction.text import CountVectorizer
 from numpy import loadtxt
-from numpy import array
+from numpy import matrix
+import tensorflow as tf
+from keras.backend import shape
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Input, Dense
 from keras.layers import LSTM
 from keras.layers import Embedding
 # load the dataset
@@ -35,30 +37,35 @@ tokenizer.fit_on_texts(lines)
 # vocabulary size
 vocab_size = len(tokenizer.word_index) + 1
 sequences = tokenizer.texts_to_sequences(lines)
-print(sequences[1])
 # standardize input
 standard=0
 for sequence in sequences:
 	if(standard<len(sequence)):
 		standard=len(sequence)
+#standard=standard+2
 for sequence in sequences:
 	if(len(sequence)<standard):
 		for i in range(0,standard):
 			sequence.append(0)
 #for i in range(0 ,len(sequences)):
 #	sequences[i].append(numbers[])
-X = array(sequences)
-#print(X[1])
-y=array(numbers)
+X =  matrix(sequences)
+print(X.shape)
+print(X[0,0])
+y= matrix(numbers)
+print(y.shape)
 # define the keras model
 model = Sequential()
-model.add(Dense(128, input_dim=standard, activation='relu'))
-model.add(Dense(64, activation='relu'))
-model.add(Dense(32, activation='sigmoid'))
+model.add(Dense	(128, activation='relu'))
+#print(model.summary())
+#model.add(Dense(100, activation='relu'))
+#print(model.summary())
+#model.add(Dense(100, activation='relu'))
+#print(model.summary())
+#model.add(Dense(vocab_size, activation='softmax'))
 # compile the keras model
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-# fit the keras model on the dataset
-# compile model
+#print(model.summary())
 # fit model
 model.fit(X, y, batch_size=128, epochs=20)
 print(model.summary())

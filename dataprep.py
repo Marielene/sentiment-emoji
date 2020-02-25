@@ -40,14 +40,8 @@ def saveProcessed(lines, filename):
 	file.close()
 tweets=[]
 filereaderMainData("C:/Users/setsu/documents/attempts/emoji_prediction/emoji_prediction/train/us_train.text", tweets)
-f= open("processed.txt","w+")
-f.close()
 saveProcessed(tweets, "processed.txt")
 emojis=[]
-f= open("processedEmoji.txt","w+")
-f.close()
 fileReaderEmoji("C:/Users/setsu/documents/attempts/emoji_prediction/emoji_prediction/train/us_train.labels", emojis)
 saveProcessed(emojis, "processedEmoji.txt")
-#Split in letters
-#Organise as n-grams
-#Set n-grams max val
+print("Done!")

@@ -1,17 +1,20 @@
-from sklearn.feature_extraction.text import CountVectorizer
-from numpy import loadtxt
-from numpy import matrix
-import tensorflow as tf
-from keras.backend import shape
+
+import numpy as np
+import pandas as pd
 from keras.models import Sequential
-from keras.layers import Input, Dense
+from keras.layers import Dense
 from keras.layers import LSTM
-from keras.layers import Embedding
-# load the dataset
+from keras.layers.embeddings import Embedding
+from keras.preprocessing import sequence as sq
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.text import hashing_trick
-from nltk.tokenize import word_tokenize
- 
+from keras.layers.core import Activation, Dropout, Dense
+from keras.layers import Flatten
+from keras.layers import GlobalMaxPooling1D
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from keras.backend import shape
+# fix random seed for reproducibility
 # load doc into memory
 def load_doc(filename):
 	# open the file as read only
@@ -21,54 +24,43 @@ def load_doc(filename):
 	# close the file
 	file.close()
 	return text
- 
+data={}
 # load prepped data
 in_filenameX = 'processed.txt'
 in_filenameY = 'processedEmoji.txt'
 docTweets = load_doc(in_filenameX)
 docEmojis = load_doc(in_filenameY)
-numbers= docEmojis.split('\n')
-lines = docTweets.split('\n')
-
-
+emoji= docEmojis.split('\n')
+tweets= docTweets.split('\n')
+temp=list(map(int, emoji))
+emoji=np.array(temp)
 # integer encode sequences of words
 tokenizer = Tokenizer()
-tokenizer.fit_on_texts(lines)
+tokenizer.fit_on_texts(tweets)
+#tokenizer.fit_on_sequences(tweets)
 # vocabulary size
 vocab_size = len(tokenizer.word_index) + 1
-sequences = tokenizer.texts_to_sequences(lines)
+sequences = tokenizer.texts_to_sequences(tweets)
+unique_words=len(np.unique(sequences))
+print("unique words: " + str(unique_words))
 # standardize input
 standard=0
 for sequence in sequences:
 	if(standard<len(sequence)):
 		standard=len(sequence)
-#standard=standard+2
-for sequence in sequences:
-	if(len(sequence)<standard):
-		for i in range(0,standard):
-			sequence.append(0)
-#for i in range(0 ,len(sequences)):
-#	sequences[i].append(numbers[])
-X =  matrix(sequences)
-print(X.shape)
-print(X[0,0])
-y= matrix(numbers)
-print(y.shape)
-# define the keras model
+X_train=sequences
+X_train = sq.pad_sequences(X_train, padding='post', maxlen=standard)
+y_train=emoji
+print(y_train.shape)
+embedding_vecor_length = 32
 model = Sequential()
-model.add(Dense	(128, activation='relu'))
-#print(model.summary())
-#model.add(Dense(100, activation='relu'))
-#print(model.summary())
-#model.add(Dense(100, activation='relu'))
-#print(model.summary())
-#model.add(Dense(vocab_size, activation='softmax'))
-# compile the keras model
-model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-#print(model.summary())
-# fit model
-model.fit(X, y, batch_size=128, epochs=20)
+model.add(Embedding(vocab_size, 100, input_length=standard))
+model.add(LSTM(100))
+model.add(Dense(1, activation='sigmoid'))
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
 print(model.summary())
-# evaluate the keras model
-_, accuracy = model.evaluate(X, y)
-print('Accuracy: %.2f' % (accuracy*100))
+#print(y_train[0] + " " + X_train[0])
+model.fit(X_train, y_train, batch_size=128, epochs=6, verbose=1, validation_split=0.2)
+# Final evaluation of the model
+#scores = model.evaluate(X_test, y_test, verbose=0)
+print("Accuracy: %.2f%%" % (scores[1]*100))

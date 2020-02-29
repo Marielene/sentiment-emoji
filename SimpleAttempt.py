@@ -14,7 +14,7 @@ from keras.layers import MaxPooling1D, Conv1D
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from keras.backend import shape
-# fix random seed for reproducibility
+from keras import optimizers
 # load doc into memory
 def load_doc(filename):
 	# open the file as read only
@@ -24,6 +24,13 @@ def load_doc(filename):
 	# close the file
 	file.close()
 	return text
+#find biggest LIST entry
+def countMax(count_list):
+	maxboi=0
+	for item in count_list:
+		if(maxboi<len(item)):
+			maxboi=len(item)
+	return maxboi
 # load prepped data
 #in_filenameX = 'processedSmallBatch.txt'
 #in_filenameY = 'processedEmojiSmallBatch.txt'
@@ -44,23 +51,27 @@ sequences = tokenizer.texts_to_sequences(tweets)
 unique_words=len(np.unique(sequences))
 print("unique words: " + str(unique_words))
 # standardize input
-standard=0
-for sequence in sequences:
-	if(standard<len(sequence)):
-		standard=len(sequence)
+standard=countMax(sequences)
 X_train=sequences
 X_train = sq.pad_sequences(X_train, padding='post', maxlen=standard)
 y_train=emoji
+sgd = optimizers.SGD(lr=0.01, clipvalue=0.5)
 model = Sequential()
 model.add(Embedding(vocab_size, 100, input_length=standard))
-model.add(Conv1D(filters=32, kernel_size=3, padding='same', activation='relu'))
-model.add(MaxPooling1D(pool_size=2))
+#model.add(Conv1D(filters=32, kernel_size=3, padding='same', activation='relu'))
+#model.add(MaxPooling1D(pool_size=2))
+model.add(LSTM(100, return_sequences=True))
+model.add(LSTM(100, return_sequences=True))
 model.add(LSTM(100))
-model.add(Dense(1, activation='sigmoid'))
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
+model.add(Dense(100, activation='relu'))
+model.add(Dense(100, activation='relu'))
+model.add(Dense(1, activation='softmax'))
+model.compile(optimizer=sgd, loss='kullback_leibler_divergence', metrics=['accuracy'])
 print(model.summary())
-#print(y_train[0] + " " + X_train[0])
-model.fit(X_train, y_train, batch_size=128, epochs=6, verbose=1, validation_split=0.2)
+model.fit(X_train, y_train, batch_size=128, epochs=32, verbose=1, validation_split=0.2)
 # Final evaluation of the model
-#scores = model.evaluate(X_test, y_test, verbose=0)
-#print("Accuracy: %.2f%%" % (scores[1]*100))
+
+# save the model to file
+model.save('model.h5')
+# save the tokenizer
+dump(tokenizer, open('tokenizer.pkl', 'wb'))

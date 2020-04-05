@@ -1,47 +1,57 @@
-#HOW PARSE EMOJI ????? HOW LIVE???? WHEN FIND OUT????
 import os
 import re
+import string
 import numpy as np
-import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import word_tokenize 
 import codecs
 #Reduce data further by removing unnecessary wording
-StopW=set(stopwords.words('english'))
-lemmatizer = WordNetLemmatizer();
-def filereaderMainData(filenaem, tweets):
+lemmatizer = WordNetLemmatizer() 
+StopW=list(stopwords.words('english'))
+StopW.append('ive')
+StopW.append('youve')
+StopW.append('im')
+StopW.append('user')
+def file_parser(filenaem, tweets):
 	datafile = open(filenaem, encoding="utf8")
 	for line in datafile:
-		#replace ALL spaces with single space in tweet
-		line=re.sub(r"\s+", " ", line, flags=re.UNICODE)
-		#remove punctuation
-		line=re.sub(r'[^\w\s]','',line.lower());
-		line=lemmatizer.lemmatize(line);
-		temp=line.split()
-		temp=[word for word in temp if word not in StopW]
-		line=' '.join(temp)
-		tweets.append(line)
-		#print(processed)
+		# LOWERCASE
+		line=line.lower()
+		#remove whitespace at ends
+		line=line.strip()
+		#ensure the tweets are stopword-free
+		for word in StopW:
+			checkstr= r"\b" + word + r"\b"
+			line=re.sub(checkstr, '', line)
+		line= lemmatizer.lemmatize(line)
+		# single letters removal
+		line = re.sub(r"\b[a-zA-Z]\b", '', line, flags=re.UNICODE)
+		#ensure the tweet is only spaces and letters
+		line = re.sub('[^a-zA-Z ]+', '', line, flags=re.UNICODE)
+		#replace all whitespace with single space.
+		line=re.sub(r"\s+", ' ', line, flags=re.UNICODE)
+		#clear edges again to be sure
+		line=line.strip()
 		#print(line)
+		tweets.append(line)
 	datafile.close()
 #separate function with no cleaning
-def fileReaderEmoji(filenaem, emojis):
+def file_parser_emoji(filenaem, emojis):
 	datafile=open(filenaem,"r")
 	for line in datafile:
 		line=re.sub(r"\n", "", line, flags=re.UNICODE)
 		emojis.append(line)
 	datafile.close()
 # save tokens to file, one dialog per line
-def saveProcessed(lines, filename):
+def save_file(lines, filename):
 	data = '\n'.join(lines)
 	file = open(filename, "w+", encoding="utf8")
 	file.write(data)
 	file.close()
 tweets=[]
-filereaderMainData("C:/Users/setsu/documents/attempts/emoji_prediction/emoji_prediction/train/us_train.text", tweets)
-saveProcessed(tweets, "processed.txt")
+file_parser("C:/Users/setsu/documents/attempts/emoji_prediction/emoji_prediction/train/us_train.text", tweets)
+save_file(tweets, "processed.txt")
 emojis=[]
-fileReaderEmoji("C:/Users/setsu/documents/attempts/emoji_prediction/emoji_prediction/train/us_train.labels", emojis)
-saveProcessed(emojis, "processedEmoji.txt")
+#file_parser_emoji("C:/Users/setsu/documents/attempts/emoji_prediction/emoji_prediction/train/us_train.labels", emojis)
+#save_file(emojis, "processedEmoji.txt")
 print("Done!")

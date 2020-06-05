@@ -1,10 +1,12 @@
-import os
+# -*- coding: utf-8 -*-
+"""
+Data preparation before inputing the emoji data into the models.
+
+@author: Kalleid
+"""
 import re
-import string
-import numpy as np
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-import codecs
 #Reduce data further by removing unnecessary wording
 lemmatizer = WordNetLemmatizer() 
 StopW=list(stopwords.words('english'))
@@ -20,9 +22,9 @@ def file_parser(filenaem, tweets):
 		#remove whitespace at ends
 		line=line.strip()
 		#ensure the tweets are stopword-free
-		for word in StopW:
-			checkstr= r"\b" + word + r"\b"
-			line=re.sub(checkstr, '', line)
+		#for word in StopW:
+		#	checkstr= r"\b" + word + r"\b"
+		#	line=re.sub(checkstr, '', line)
 		line= lemmatizer.lemmatize(line)
 		# single letters removal
 		line = re.sub(r"\b[a-zA-Z]\b", '', line, flags=re.UNICODE)
@@ -48,10 +50,14 @@ def save_file(lines, filename):
 	file = open(filename, "w+", encoding="utf8")
 	file.write(data)
 	file.close()
+# run and save
+print("Running...")
 tweets=[]
 file_parser("C:/Users/setsu/documents/attempts/emoji_prediction/emoji_prediction/train/us_train.text", tweets)
-save_file(tweets, "processed.txt")
+save_file(tweets, "text_train.txt")
+print("Text - processed.")
 emojis=[]
-#file_parser_emoji("C:/Users/setsu/documents/attempts/emoji_prediction/emoji_prediction/train/us_train.labels", emojis)
-#save_file(emojis, "processedEmoji.txt")
+file_parser_emoji("C:/Users/setsu/documents/attempts/emoji_prediction/emoji_prediction/train/us_train.labels", emojis)
+save_file(emojis, "labels_train.txt")
+# print final message to show something is happening
 print("Done!")

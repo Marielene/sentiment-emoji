@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
+Combined model using sentiment vector and tweet data to predict emoji
+
 @author: Kalleid
 """
-
 import numpy as np
 from tensorflow import keras
 from keras.models import Sequential
@@ -66,8 +67,8 @@ print('Found %s word vectors.' % len(embeddings_index))
 
 # load prepped data
 in_filename_sent='tweets_sentiment.txt'
-in_filename_tweets = 'processed.txt'
-in_filename_emoji = 'processedEmoji.txt'
+in_filename_tweets = 'text_train.txt'
+in_filename_emoji = 'labels_train.txt'
 docx_train = load_doc(in_filename_tweets)
 docsent_train=load_doc(in_filename_sent)
 docy_train = load_doc(in_filename_emoji)

@@ -1,9 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Evaluation for mixed input model
+
+@author: Kalleid
+"""
 import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 from tensorflow import keras
 from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
-from keras.layers import Dense, LSTM, Bidirectional, Input, Embedding, concatenate
+from keras.layers import Dense, LSTM, Bidirectional, Input, Embedding, concatenate, Dropout, GlobalMaxPool1D
 from sklearn.model_selection import KFold
 from keras.models import Model
 from keras.initializers import Constant
@@ -13,8 +18,6 @@ import random
 from keras.utils import plot_model
 from keras.utils import to_categorical
 from nltk.stem import WordNetLemmatizer
-from keras.models import Model
-from keras.models import model_from_json
 from sklearn.model_selection import KFold
 from pickle import dump
 
@@ -57,8 +60,8 @@ print('Found %s word vectors.' % len(embeddings_index))
 
 
 # load emoji data
-in_filenameX = 'processed.txt'
-in_filenameY = 'processedEmoji.txt'
+in_filenameX = 'text_train.txt'
+in_filenameY = 'labels_train.txt'
 docx_train = load_doc(in_filenameX)
 docy_train = load_doc(in_filenameY)
 tweets= docx_train.split('\n')
@@ -133,9 +136,9 @@ embedded_sequences_sent = embedding_layer(sequence_input_sent)
 emo = Bidirectional(LSTM(128, recurrent_dropout=0.5, return_sequences=True, name='emo_bi_lstm'))(embedded_sequences_emo)
 sent = Bidirectional(LSTM(64, recurrent_dropout=0.4, return_sequences=True, name='sent_bi_lstm'))(embedded_sequences_sent)
 merged=concatenate([emo, sent])
-x = LSTM(128, recurrent_dropout=0.4, return_sequences=True, name='standard_lstm2')(merged)
-x = LSTM(64, recurrent_dropout=0.2, name='standard_lstm3')(x)
-#sent = LSTM(32, recurrent_dropout=0.2)(sent)
+x = GlobalMaxPool1D()(merged)
+x = Dense(100, activation="relu")(x)
+x = Dropout(0.25)(x)
 
 #Outputs
 preds_emoji = Dense(20, activation='softmax', name='emo_output')(x)
@@ -149,12 +152,11 @@ model.compile(
           'emo_output': keras.losses.CategoricalCrossentropy(from_logits=True, reduction="auto", name="categorical_crossentropy")},
     metrics={'sent_output': keras.metrics.SparseCategoricalAccuracy(),
             'emo_output': keras.metrics.CategoricalAccuracy()})
-
 #Summary & struct
 print(model.summary())
-plot_model(model, 'Abomination.png', show_shapes=True)
+plot_model(model, 'merged_diagram.png', show_shapes=True)
 # crossvalidator
-kfold=KFold(n_splits=4)
+kfold=KFold(n_splits=5)
 # Fit on dicts
 for train, test in kfold.split(X_sent):
     model.fit([X_emoji[train], X_sent[train]],

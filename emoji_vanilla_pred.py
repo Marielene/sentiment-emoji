@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu May 28 17:00:04 2020
+Emoji-only model definition
 
 @author: Kalleid
 """
@@ -68,8 +68,8 @@ print('Found %s word vectors.' % len(embeddings_index))
 
 
 # load prepped data
-in_filenameX = 'processed.txt'
-in_filenameY = 'processedEmoji.txt'
+in_filenameX = 'text_train.txt'
+in_filenameY = 'labels_train.txt'
 docx_train = load_doc(in_filenameX)
 docy_train = load_doc(in_filenameY)
 tweets= docx_train.split('\n')

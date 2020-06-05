@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-
+Sentiment prediction prior to using for combined model 
 
 @author: Kalleid
 """
@@ -45,7 +45,7 @@ tokenizer = load(open('tokenizer.pkl', 'rb'))
 
 # load data and resume training
 # load prepped data
-in_filenameX = 'processed.txt'
+in_filenameX = 'text_dev.txt'
 docx_train = load_doc(in_filenameX)
 tweets= docx_train.split('\n')
 

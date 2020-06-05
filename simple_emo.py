@@ -1,24 +1,22 @@
+# -*- coding: utf-8 -*-
+"""
+Sentiment prediction prior to using for combined model 
+
+@author: Kalleid
+"""
 import numpy as np
-import os
 from tensorflow import keras
-from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM, Input, Bidirectional
 from keras.layers.embeddings import Embedding
 from keras.preprocessing import sequence as sq
 from keras.preprocessing.text import Tokenizer
-from keras.layers.core import Activation, Dropout
 from keras.initializers import Constant
 from keras.utils import to_categorical
 from keras.callbacks import ReduceLROnPlateau
 from keras.models import Model
 from keras.models import model_from_json
 from sklearn.model_selection import KFold
-from sklearn.preprocessing import LabelBinarizer	
-from keras.wrappers.scikit_learn import KerasClassifier
-from sklearn.model_selection import cross_val_score
-from sklearn.preprocessing import LabelEncoder
-from sklearn.pipeline import Pipeline
 from pickle import dump
 
 # load doc into memory
@@ -87,7 +85,7 @@ word_index=tokenizer.word_index
 # organize data.
 emoji_prep=prep_data_int(emoji)
 Y=to_categorical(emoji_prep)
-print(Y[0])
+# save a small sample to run unofficial eval prior to further training
 X_test=X[-1000:]
 X_train=X[:-1000]
 Y_test=Y[-1000:]
@@ -123,11 +121,9 @@ model.compile(loss='categorical_crossentropy',
               metrics=['categorical_accuracy'])
 print(model.summary())
 #Fit and train
-#wrapped_model = KerasClassifier(build_fn=model, epochs=5, batch_size=size_batch, verbose=1)
-#results = cross_val_score(wrapped_model, X_train, y_train, cv=kfold)
-#print("Baseline: %s %  (%s)" % (results.mean()*100, results.std()*100))
-for train, test in kfold.split(X_train, y_train):
-	model.fit(X_train[train],y_train[train], epochs=1, batch_size=size_batch, verbose=1, validation_data=(X_train[test], y_train[test]))
+for i in range (1, 5):
+    for train, test in kfold.split(X_train, y_train):
+        model.fit(X_train[train],y_train[train], epochs=1, batch_size=size_batch, verbose=1, validation_data=(X_train[test], y_train[test]))
 # save the model to file
 model_json = model.to_json()
 with open("model.json", "w") as json_file:
@@ -139,7 +135,6 @@ print("Saved model to disk")
 # save the tokenizer
 dump(tokenizer, open('tokenizer.pkl', 'wb'))
 
-#eval hopefully
 #load json and create model
 json_file = open('model.json', 'r')
 loaded_model_json = json_file.read()
@@ -149,7 +144,7 @@ loaded_model = model_from_json(loaded_model_json)
 loaded_model.load_weights("model.h5")
 print("Loaded model from disk")
  
-# evaluate loaded model on test data
+# evaluate loaded model on saved tiny sample data
 loaded_model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
 score = loaded_model.evaluate(X_test, Y_test, verbose=1)
 print("Accuracy:" + str(score[1]*100) + "%")

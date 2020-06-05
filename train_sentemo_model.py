@@ -42,8 +42,8 @@ tokenizer = load(open('tokenizer.pkl', 'rb'))
 # load data and resume training
 # load prepped data
 in_filename_sent='tweets_sentiment.txt'
-in_filename_tweets = 'processed.txt'
-in_filename_emoji = 'processedEmoji.txt'
+in_filename_tweets = 'text_train.txt'
+in_filename_emoji = 'labels_train.txt'
 docx_train = load_doc(in_filename_tweets)
 docsent_train=load_doc(in_filename_sent)
 docy_train = load_doc(in_filename_emoji)
@@ -63,10 +63,9 @@ X=sq.pad_sequences(sequences, padding='post', maxlen=standard)
 unique_words=len(np.unique(X))
 sent=[]
 for items in sentiment:
-  indices=[int(items[0])+int(items[3])]
+  indices=[int(items[0]),int(items[1]), int(items[2])]
   sent.append(indices)
 X_sent=sq.pad_sequences(sent, padding='post', maxlen=standard)
-dim_sent=standard
 # organize data.
 emoji_prep=prep_data_int(emoji)
 Y=to_categorical(emoji_prep)
@@ -80,13 +79,13 @@ y_train=Y[:-1000]
 size_batch=128
 
 #Load model architecture from json file
-json_file = open('model.json', 'r')
+json_file = open('model_sentemo.json', 'r')
 loaded_model_json = json_file.read()
 json_file.close()
 loaded_model = model_from_json(loaded_model_json)
 
 # load weights into new model
-loaded_model.load_weights("model.h5")
+loaded_model.load_weights("model_sentemo.h5")
 print("Loaded model from disk")
 
 # compile
@@ -105,10 +104,10 @@ model_checkpoint_callback = ModelCheckpoint(
     mode='max',
     save_best_only=True)
 # train further
-kfold = KFold(n_splits=5)
+kfold = KFold(n_splits=4)
 for i in range(1, 4):
-    for train, test in kfold.split(X_train):
-        loaded_model.fit([X_train[train], X_sent_train[train]] ,y_train[train], epochs=1, batch_size=size_batch, verbose=1, validation_data=([X_train[test],X_sent_train[test]], y_train[test]), callbacks=[reduce_lr, model_checkpoint_callback])
+  for train, test in kfold.split(X_train):
+    loaded_model.fit([X_train[train], X_sent_train[train]] ,y_train[train], epochs=1, batch_size=size_batch, verbose=1, validation_data=([X_train[test],X_sent_train[test]], y_train[test]), callbacks=[reduce_lr, model_checkpoint_callback])
 #Save model again after training.
 model_json = loaded_model.to_json()
 with open("model_sentemo.json", "w") as json_file:
